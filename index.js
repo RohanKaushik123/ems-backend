@@ -24,17 +24,21 @@ app.use((req, res, next) => {
 
 app.use("/employees", employeeRoutes);
 
-const frontendDistPath = path.join(__dirname, "..", "vite-project", "dist");
+const frontendDistPath = path.join(__dirname, "dist");
 
 if (fs.existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
 
-  app.get("*", (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith("/employees")) {
       return next();
     }
 
-    res.sendFile(path.join(frontendDistPath, "index.html"));
+    if (req.method === "GET" && !req.path.includes(".")) {
+      return res.sendFile(path.join(frontendDistPath, "index.html"));
+    }
+
+    next();
   });
 }
 
