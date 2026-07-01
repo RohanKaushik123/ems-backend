@@ -1,5 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const employeeRoutes = require("./routes/employeeRoutes");
@@ -22,8 +24,26 @@ app.use((req, res, next) => {
 
 app.use("/employees", employeeRoutes);
 
+const frontendDistPath = path.join(__dirname, "..", "vite-project", "dist");
+
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/employees")) {
+      return next();
+    }
+
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  });
+}
+
 app.get("/", (req, res) => {
-  res.send("Employee Management API Running");
+  if (fs.existsSync(frontendDistPath)) {
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  } else {
+    res.send("Employee Management API Running");
+  }
 });
 
 const PORT = process.env.PORT || 5100;
